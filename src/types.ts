@@ -1,24 +1,31 @@
+export type UserRole = 'Guru' | 'Murid';
+
 export interface UserProfile {
   id: string;
+  role: UserRole;
   name: string;
-  email: string;
-  nisn: string;
+  nis: string; // NIS untuk Murid, NIP / Kode Guru untuk Guru
+  email?: string;
+  nisn?: string;
   school: string;
   grade: string;
+  password?: string;
   coins: number;
   stars: number;
   totalScore: number;
   capingStyle: string;
   avatarSeed: string;
+  lastLogin?: string;
 }
 
 export interface GameScoreRecord {
   id: string;
   timestamp: string;
   studentName: string;
-  studentEmail: string;
+  studentEmail?: string;
   userName?: string;
   userEmail?: string;
+  nis?: string;
   nisn?: string;
   school: string;
   grade: string;
@@ -29,10 +36,36 @@ export interface GameScoreRecord {
   kkm: number;
   stars: number;
   coinsEarned: number;
-  accuracy?: number;
+  accuracy?: number | string;
   status: 'Lulus KKM' | 'Coba Lagi';
   badgeUnlocked?: string;
   syncStatus: 'Tersimpan di Google Sheets' | 'Tersimpan Lokal' | 'Sinkronisasi...';
+}
+
+export interface TeacherGradebookResponse {
+  success: boolean;
+  authorizedRole: string;
+  totalSesiGame: number;
+  totalSiswa: number;
+  gradebook: GameScoreRecord[];
+  students: {
+    id: string;
+    nis: string;
+    name: string;
+    grade: string;
+    school: string;
+    coins: number;
+    stars: number;
+    totalScore: number;
+    lastActive?: string;
+  }[];
+  stats?: {
+    totalSiswa: number;
+    totalSesiGame: number;
+    rataRataSkor: number;
+    tingkatKelulusanKKM: string;
+  };
+  message?: string;
 }
 
 export interface LevelInfo {

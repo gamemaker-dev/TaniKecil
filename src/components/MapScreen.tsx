@@ -9,6 +9,7 @@ interface MapScreenProps {
   onOpenStudyMaterial: () => void;
   onOpenShop: () => void;
   onOpenGoogleSheets: () => void;
+  onOpenReport?: () => void;
   levelScores: Record<number, { stars: number; highScore: number }>;
 }
 
@@ -61,6 +62,18 @@ export const LEVELS: LevelInfo[] = [
     targetScore: 600,
     badgeAwarded: 'Juragan Panen Makmur',
   },
+  {
+    id: 5,
+    title: 'Level 5: Irigasi Subak & Ekosistem Sawah',
+    subtitle: 'Fase C: Warisan dunia Subak, pembagian air terasering & rantai makanan',
+    description: 'Atur pintu debit air 3 petak terasering subak dan jaga rantai makanan sawah!',
+    icon: '🌊',
+    themeColor: 'teal',
+    unlocked: true,
+    requiredStars: 8,
+    targetScore: 700,
+    badgeAwarded: 'Pahlawan Subak Lestari',
+  },
 ];
 
 export const MapScreen: React.FC<MapScreenProps> = ({
@@ -70,6 +83,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
   onOpenStudyMaterial,
   onOpenShop,
   onOpenGoogleSheets,
+  onOpenReport,
   levelScores,
 }) => {
   const totalStarsEarned = Object.values(levelScores).reduce((acc, curr) => acc + (curr?.stars || 0), 0);
@@ -88,7 +102,19 @@ export const MapScreen: React.FC<MapScreenProps> = ({
         <div className="flex items-center gap-2 bg-white/70 backdrop-blur-xs px-4 py-1.5 rounded-full text-xs font-semibold text-emerald-800 shadow-xs border border-white">
           <span>🌤️ Cuaca Subur Hari Ini: Cerah Berawan</span>
         </div>
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2.5">
+          {onOpenReport && (
+            <button
+              onClick={() => {
+                sound.playClick();
+                onOpenReport();
+              }}
+              className="pointer-events-auto flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-stone-900 px-3.5 py-1.5 rounded-full text-xs font-black shadow-xs transition"
+            >
+              <span>📜</span>
+              <span>Rapor & Sertifikat</span>
+            </button>
+          )}
           <button
             onClick={() => {
               sound.playClick();
@@ -133,7 +159,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                   Halo, {currentUser.name || 'Petani Hebat'}!
                 </h1>
                 <p className="text-xs sm:text-sm text-emerald-100 font-medium">
-                  Kelas {currentUser.grade || '4 SD'} | Siap menjelajahi 4 misi pertanian nusantara?
+                  Kelas {currentUser.grade || '4 SD'} | Siap menjelajahi 5 misi pertanian nusantara?
                 </p>
               </div>
             </div>
@@ -143,7 +169,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({
                 <div className="text-[10px] uppercase font-bold text-amber-300">Total Bintang</div>
                 <div className="text-xl font-extrabold text-white flex items-center justify-center gap-1">
                   <span>⭐</span>
-                  <span>{totalStarsEarned}/12</span>
+                  <span>{totalStarsEarned}/15</span>
                 </div>
               </div>
 

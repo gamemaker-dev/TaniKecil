@@ -85,7 +85,7 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
           >
             Semua Misi
           </button>
-          {[1, 2, 3, 4].map((lvl) => (
+          {[1, 2, 3, 4, 5].map((lvl) => (
             <button
               key={lvl}
               onClick={() => {

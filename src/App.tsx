@@ -10,22 +10,27 @@ import { Level1Game } from './components/Level1Game';
 import { Level2Game } from './components/Level2Game';
 import { Level3Game } from './components/Level3Game';
 import { Level4Game } from './components/Level4Game';
+import { Level5Game } from './components/Level5Game';
 import { ResultModal } from './components/ResultModal';
 import { LeaderboardScreen } from './components/LeaderboardScreen';
 import { StudyMaterialModal } from './components/StudyMaterialModal';
 import { ShopScreen } from './components/ShopScreen';
 import { GoogleSheetsModal } from './components/GoogleSheetsModal';
+import { StudentReportModal } from './components/StudentReportModal';
+import { TeacherGradebookScreen } from './components/TeacherGradebookScreen';
 
 const STORAGE_KEY_USER = 'tani_cilik_user_profile';
 const STORAGE_KEY_PROGRESS = 'tani_cilik_level_scores';
 
 const DEFAULT_USER: UserProfile = {
-  id: 'user_1',
+  id: 'SISWA-01',
+  role: 'Murid',
+  nis: '1001',
   name: 'Budi Santoso',
   email: 'budi.santoso@guru.sd.belajar.id',
   nisn: '0129482910',
   school: 'SDN Nusantara 01 Pagi',
-  grade: 'Kelas 4B',
+  grade: 'Kelas 4A',
   coins: 180,
   stars: 4,
   totalScore: 780,
@@ -56,12 +61,15 @@ export default function App() {
       2: { stars: 1, highScore: 360 },
       3: { stars: 0, highScore: 0 },
       4: { stars: 0, highScore: 0 },
+      5: { stars: 0, highScore: 0 },
     };
   });
 
-  const [currentScreen, setCurrentScreen] = useState<string>('map');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [currentScreen, setCurrentScreen] = useState<string>('splash');
   const [isGoogleSheetsOpen, setIsGoogleSheetsOpen] = useState(false);
   const [isStudyMaterialOpen, setIsStudyMaterialOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Result dialog state
   const [resultData, setResultData] = useState<{
@@ -97,6 +105,7 @@ export default function App() {
 
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
+    setIsLoggedIn(true);
     setCurrentScreen('map');
   };
 
@@ -143,8 +152,8 @@ export default function App() {
     // AUTOMATIC SYNC TO GOOGLE APPS SCRIPT & GOOGLE SHEETS
     const syncRes = await sheetsDB.recordGameScore({
       userName: currentUser.name,
-      userEmail: currentUser.email,
-      nisn: currentUser.nisn,
+      userEmail: currentUser.email || '',
+      nis: currentUser.nis || '1001',
       school: currentUser.school,
       grade: currentUser.grade,
       levelId,
@@ -170,19 +179,34 @@ export default function App() {
     });
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem(STORAGE_KEY_USER);
+    setIsLoggedIn(false);
+    setCurrentScreen('splash');
+  };
+
   return (
     <div className="min-h-screen bg-[#F4F7F2] flex flex-col font-sans">
       {/* Top App Navbar */}
       <Navbar
         currentUser={currentUser}
         currentScreen={currentScreen}
+        isLoggedIn={isLoggedIn}
         onNavigate={(screen) => {
+          if (!isLoggedIn) {
+            setCurrentScreen('splash');
+            return;
+          }
           sound.playClick();
           setCurrentScreen(screen);
         }}
         onOpenGoogleSheets={() => {
           sound.playClick();
           setIsGoogleSheetsOpen(true);
+        }}
+        onOpenTeacherGradebook={() => {
+          sound.playClick();
+          setCurrentScreen('teacher-gradebook');
         }}
         onOpenStudyMaterial={() => {
           sound.playClick();
@@ -192,6 +216,7 @@ export default function App() {
           sound.playClick();
           setCurrentScreen('shop');
         }}
+        onLogout={handleLogout}
       />
 
       {/* Screen Router */}
@@ -219,6 +244,10 @@ export default function App() {
             onOpenGoogleSheets={() => {
               sound.playClick();
               setIsGoogleSheetsOpen(true);
+            }}
+            onOpenReport={() => {
+              sound.playClick();
+              setIsReportOpen(true);
             }}
             levelScores={levelScores}
           />
@@ -260,8 +289,25 @@ export default function App() {
           />
         )}
 
+        {currentScreen === 'level-5' && (
+          <Level5Game
+            onComplete={(score, stars, coins, acc) =>
+              handleLevelComplete(5, score, stars, coins, acc)
+            }
+            onExit={() => setCurrentScreen('map')}
+          />
+        )}
+
         {currentScreen === 'leaderboard' && (
           <LeaderboardScreen
+            currentUser={currentUser}
+            onBack={() => setCurrentScreen('map')}
+            onOpenGoogleSheets={() => setIsGoogleSheetsOpen(true)}
+          />
+        )}
+
+        {currentScreen === 'teacher-gradebook' && (
+          <TeacherGradebookScreen
             currentUser={currentUser}
             onBack={() => setCurrentScreen('map')}
             onOpenGoogleSheets={() => setIsGoogleSheetsOpen(true)}
@@ -313,6 +359,15 @@ export default function App() {
       {/* Study Material Handbook Modal */}
       {isStudyMaterialOpen && (
         <StudyMaterialModal onClose={() => setIsStudyMaterialOpen(false)} />
+      )}
+
+      {/* Student Achievement Report & Certificate Modal */}
+      {isReportOpen && (
+        <StudentReportModal
+          currentUser={currentUser}
+          levelScores={levelScores}
+          onClose={() => setIsReportOpen(false)}
+        />
       )}
     </div>
   );

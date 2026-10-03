@@ -6,7 +6,7 @@ interface StudyMaterialModalProps {
 }
 
 export const StudyMaterialModal: React.FC<StudyMaterialModalProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'organ' | 'fotosintesis' | 'hama' | 'pangan'>('organ');
+  const [activeTab, setActiveTab] = useState<'organ' | 'fotosintesis' | 'hama' | 'pangan' | 'subak'>('organ');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
@@ -89,6 +89,19 @@ export const StudyMaterialModal: React.FC<StudyMaterialModalProps> = ({ onClose 
             }`}
           >
             🌾 Ketahanan Pangan
+          </button>
+          <button
+            onClick={() => {
+              sound.playClick();
+              setActiveTab('subak');
+            }}
+            className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+              activeTab === 'subak'
+                ? 'bg-teal-700 text-white shadow-xs'
+                : 'text-stone-600 hover:bg-stone-200'
+            }`}
+          >
+            🌊 Subak & Ekosistem
           </button>
         </div>
 
@@ -213,6 +226,38 @@ export const StudyMaterialModal: React.FC<StudyMaterialModalProps> = ({ onClose 
                 </h4>
                 <p className="text-xs text-stone-600 leading-relaxed">
                   Petani yang cerdas mengelola hasil panen secara berkelanjutan, menghitung biaya produksi dan keuntungan, serta menjaga kesuburan tanah untuk generasi masa depan!
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'subak' && (
+            <div className="space-y-3">
+              <div className="bg-teal-50 rounded-2xl p-4 border border-teal-200">
+                <h4 className="font-bold text-teal-950 text-sm mb-1">
+                  🌊 Sistem Irigasi Tradisional Subak (Warisan Budaya Dunia UNESCO)
+                </h4>
+                <p className="text-xs text-stone-700 leading-relaxed">
+                  Subak adalah organisasi kemasyarakatan petani di Bali yang mengatur sistem pengairan sawah secara adil, transparan, dan demokratis. Berlandaskan filosofi <strong>Tri Hita Karana</strong> (harmoni manusia dengan Tuhan, sesama manusia, dan alam).
+                </p>
+              </div>
+
+              <div className="bg-teal-50 rounded-2xl p-4 border border-teal-200">
+                <h4 className="font-bold text-teal-950 text-sm mb-1">
+                  🌾 Terasering & Bangunan Bagi Air (Tembuku)
+                </h4>
+                <p className="text-xs text-stone-700 leading-relaxed">
+                  Sawah bertingkat (terasering) mencegah erosi lereng bukit. Melalui pintu air atau <em>Tembuku</em>, air dialirkan bertahap dari petak hulu ke hilir sehingga semua petani mendapatkan jatah air yang cukup dan merata.
+                </p>
+              </div>
+
+              <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
+                <h4 className="font-bold text-emerald-950 text-sm mb-1">
+                  🕸️ Keseimbangan Rantai Makanan Sawah
+                </h4>
+                <p className="text-xs text-stone-700 leading-relaxed">
+                  <strong>Padi (Produsen) ➔ Tikus (Konsumen 1) ➔ Ular Sawah (Konsumen 2) ➔ Burung Hantu/Elang (Konsumen Puncak) ➔ Cacing/Bakteri (Pengurai)</strong>.<br />
+                  Jika salah satu predator alami dibasmi (misal ular diburu), maka populasi hama tikus akan meledak dan sawah mengalami gagal panen!
                 </p>
               </div>
             </div>

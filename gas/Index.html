@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Petualangan Tani Cilik - Game Edukasi IPAS</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            fredoka: ['Fredoka', 'cursive', 'sans-serif'],
+            rubik: ['Rubik', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F4F7F2;
+      color: #2C160E;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-chunky-green {
+      background: #2E7D32;
+      border-bottom: 5px solid #1B5E20;
+      box-shadow: 0 6px 12px rgba(27, 94, 32, 0.3);
+      transition: all 0.08s ease-in-out;
+    }
+    .btn-chunky-green:active {
+      transform: translateY(4px);
+      border-bottom-width: 1px;
+      box-shadow: 0 2px 4px rgba(27, 94, 32, 0.2);
+    }
+    .btn-chunky-yellow {
+      background: #F89C00;
+      border-bottom: 5px solid #BD6B00;
+      box-shadow: 0 6px 12px rgba(189, 107, 0, 0.3);
+      transition: all 0.08s ease-in-out;
+    }
+    .btn-chunky-yellow:active {
+      transform: translateY(4px);
+      border-bottom-width: 1px;
+      box-shadow: 0 2px 4px rgba(189, 107, 0, 0.2);
+    }
+    .btn-chunky-blue {
+      background: #0288D1;
+      border-bottom: 5px solid #01579B;
+      box-shadow: 0 6px 12px rgba(1, 87, 155, 0.3);
+      transition: all 0.08s ease-in-out;
+    }
+    .btn-chunky-blue:active {
+      transform: translateY(4px);
+      border-bottom-width: 1px;
+      box-shadow: 0 2px 4px rgba(1, 87, 155, 0.2);
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+  <!-- TOP NAVBAR -->
+  <header class="no-print bg-white/95 backdrop-blur-md border-b border-stone-200 sticky top-0 z-40 px-4 py-2.5 shadow-xs">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+      <!-- Brand -->
+      <div onclick="navigateTo('map')" class="flex items-center gap-2.5 cursor-pointer group">
+        <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center text-white text-lg shadow-sm border border-green-600 group-hover:scale-105 transition">
+          🌱
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-rubik font-extrabold text-sm sm:text-base text-stone-900 leading-tight">
+              Tani Kecil
+            </span>
+            <span class="text-[10px] font-bold bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded-full border border-amber-300">
+              IPAS SD
+            </span>
+          </div>
+          <p class="text-[10px] text-stone-500 font-medium hidden sm:block leading-tight">
+            Google Apps Script & Spreadsheet Edition
+          </p>
+        </div>
+      </div>
+
+      <!-- Nav when not logged in -->
+      <div id="mainNavLoginNotice" class="flex items-center gap-2">
+        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-rubik font-bold flex items-center gap-1.5 shadow-2xs">
+          <span>🌾</span>
+          <span>Portal Masuk Guru & Murid</span>
+        </span>
+        <button onclick="toggleAudio()" class="w-8 h-8 rounded-full bg-stone-100 border border-stone-300 text-stone-700 flex items-center justify-center text-sm shadow-xs">
+          🔊
+        </button>
+      </div>
+
+      <!-- Center Nav Links (Hidden when not logged in) -->
+      <nav id="mainNavLinks" class="hidden md:flex items-center gap-1.5 bg-stone-100/90 p-1 rounded-2xl text-xs font-rubik font-bold">
+        <button onclick="navigateTo('map')" class="px-3 py-1.5 rounded-xl hover:bg-stone-200 transition">🌾 Peta Misi</button>
+        
+        <!-- KHUSUS GURU: MENU DAFTAR NILAI (HANYA MUNCUL JIKA ROLE === GURU) -->
+        <button id="navBtnGradebook" onclick="navigateTo('gradebook')" class="hidden px-3 py-1.5 rounded-xl bg-amber-200 text-amber-950 font-extrabold hover:bg-amber-300 transition flex items-center gap-1">
+          <span>📋</span>
+          <span>Daftar Nilai Guru</span>
+        </button>
+
+        <button onclick="navigateTo('leaderboard')" class="px-3 py-1.5 rounded-xl hover:bg-stone-200 transition">🏆 Peringkat</button>
+        <button onclick="openModal('modalMateri')" class="px-3 py-1.5 rounded-xl hover:bg-stone-200 transition">📖 Buku Materi</button>
+        <button onclick="navigateTo('shop')" class="px-3 py-1.5 rounded-xl hover:bg-stone-200 transition">🤠 Toko Caping</button>
+        <button onclick="openModal('modalRapor')" class="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 hover:bg-emerald-200 transition">📜 Rapor Siswa</button>
+      </nav>
+
+      <!-- Right User & Status (Hidden when not logged in) -->
+      <div id="mainNavUserStats" class="hidden items-center gap-2">
+        <!-- Role Badge -->
+        <div id="userRoleBadge" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-rubik font-bold">
+          <span id="roleIcon">🧑‍🎓</span>
+          <span id="roleText">Murid</span>
+        </div>
+
+        <button onclick="toggleAudio()" id="btnAudioToggle" class="w-8 h-8 rounded-full bg-stone-100 border border-stone-300 text-stone-700 flex items-center justify-center text-sm shadow-xs">
+          🔊
+        </button>
+
+        <div class="flex items-center gap-1 bg-amber-50 border border-amber-300 px-2.5 py-1 rounded-full text-xs font-rubik font-bold text-amber-950">
+          <span>🪙</span>
+          <span id="navCoinDisplay">180</span>
+        </div>
+
+        <button onclick="navigateTo('shop')" class="flex items-center gap-1.5 bg-stone-100 border border-stone-300 p-1 pr-2 rounded-full">
+          <span id="userCapingIcon" class="text-xs">🤠</span>
+          <span id="navUserName" class="text-xs font-rubik font-bold text-stone-800 hidden sm:inline">Budi</span>
+        </button>
+
+        <!-- Logout / Switch Account Button -->
+        <button onclick="openLoginModal()" title="Ganti Akun / Logout" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-rose-100 text-stone-600 hover:text-rose-700 border border-stone-300 flex items-center justify-center text-xs font-bold transition shadow-xs">
+          🚪
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCREEN CONTAINER -->
+  <main class="flex-1 flex flex-col">
+
+    <!-- 0. LOGIN / REGISTRATION PORTAL SCREEN -->
+    <section id="screenLogin" class="relative min-h-[calc(100vh-74px)] bg-gradient-to-b from-[#76D1F9] via-[#E1F7D5] to-[#7CB342] p-4 sm:p-6 flex flex-col items-center justify-center">
+      <div class="max-w-md w-full bg-white/95 backdrop-blur-md p-6 rounded-3xl border-4 border-stone-200 shadow-2xl text-center space-y-4">
+        <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-b from-amber-100 to-white border-4 border-amber-400 shadow-md flex items-center justify-center text-4xl">
+          <span id="loginMascot">🧑‍🌾</span>
+        </div>
+        <div>
+          <h2 class="font-rubik font-black text-2xl text-stone-900 leading-tight">
+            Masuk ke Petualangan Tani Cilik
+          </h2>
+          <p class="text-xs text-stone-600 mt-1 font-medium">
+            Game Sains IPAS SD & Database Google Spreadsheet
+          </p>
+        </div>
+
+        <!-- Role Selector Tab -->
+        <div class="bg-stone-100 p-1 rounded-2xl flex text-xs font-rubik font-bold">
+          <button type="button" onclick="setRoleTab('Murid')" id="tabBtnMurid" class="flex-1 py-2 rounded-xl bg-emerald-700 text-white shadow-xs transition">
+            🧑‍🎓 Portal Murid
+          </button>
+          <button type="button" onclick="setRoleTab('Guru')" id="tabBtnGuru" class="flex-1 py-2 rounded-xl text-stone-600 hover:text-stone-900 transition">
+            👨‍🏫 Portal Guru
+          </button>
+        </div>
+
+        <!-- Status Alert -->
+        <div id="loginAlert" class="hidden p-2.5 rounded-xl text-xs font-bold text-left border"></div>
+
+        <!-- MURID SECTION -->
+        <div id="portalMuridSection" class="text-left space-y-3">
+          <div class="flex border-b pb-2 gap-3 text-xs font-bold">
+            <button type="button" onclick="setMuridSubmode('login')" id="submodeBtnLogin" class="text-emerald-800 border-b-2 border-emerald-600 pb-1">Masuk (NIS)</button>
+            <button type="button" onclick="setMuridSubmode('register')" id="submodeBtnRegister" class="text-stone-400 pb-1">Daftar Murid Baru</button>
+          </div>
+
+          <!-- Murid Login Form -->
+          <div id="formMuridLogin" class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Nomor Induk Siswa (NIS):</label>
+              <input type="text" id="inputMuridNis" placeholder="Contoh: 1001" class="w-full px-3 py-2 text-xs font-bold border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none" value="1001">
+              <span class="text-[10px] text-stone-400 block mt-0.5">Mencocokkan NIS otomatis ke Google Spreadsheet.</span>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-bold text-stone-700">PIN / Password Siswa:</label>
+                <button type="button" onclick="toggleMuridPinVisibility()" id="btnToggleMuridPin" class="text-[11px] text-emerald-800 font-bold hover:underline">👁️ Tampilkan Sandi</button>
+              </div>
+              <div class="relative">
+                <input type="password" id="inputMuridPin" placeholder="Default: 1234" class="w-full px-3 py-2 text-xs border rounded-xl font-mono pr-9 focus:ring-2 focus:ring-emerald-500 focus:outline-none" value="1234">
+                <button type="button" onclick="toggleMuridPinVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-stone-400 hover:text-stone-700">👁️</button>
+              </div>
+              <span class="text-[10px] text-stone-500 block mt-0.5">Password bawaan: <code class="bg-stone-100 px-1 py-0.2 rounded font-bold text-stone-800">1234</code></span>
+            </div>
+            <button type="button" onclick="submitMuridLogin()" class="w-full py-2.5 rounded-xl btn-chunky-green text-white font-bold text-xs shadow-md">
+              Masuk ke Game ▶
+            </button>
+          </div>
+
+          <!-- Murid Register Form -->
+          <div id="formMuridRegister" class="hidden space-y-2.5 text-xs">
+            <div>
+              <label class="block font-bold text-stone-700 mb-0.5">NIS (Nomor Induk Siswa):</label>
+              <input type="text" id="regMuridNis" placeholder="Contoh: 1005" class="w-full px-3 py-1.5 border rounded-xl font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-stone-700 mb-0.5">Nama Lengkap Siswa:</label>
+              <input type="text" id="regMuridName" placeholder="Contoh: Rizka Putri" class="w-full px-3 py-1.5 border rounded-xl font-bold">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block font-bold text-stone-700 mb-0.5">Kelas:</label>
+                <select id="regMuridGrade" class="w-full px-2.5 py-1.5 border rounded-xl bg-white font-bold">
+                  <option value="Kelas 4A">Kelas 4A</option>
+                  <option value="Kelas 4B">Kelas 4B</option>
+                  <option value="Kelas 5A">Kelas 5A</option>
+                  <option value="Kelas 5B">Kelas 5B</option>
+                  <option value="Kelas 6">Kelas 6</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-stone-700 mb-0.5">PIN Baru:</label>
+                <input type="password" id="regMuridPin" placeholder="1234" value="1234" class="w-full px-3 py-1.5 border rounded-xl font-mono">
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-stone-700 mb-0.5">Asal Sekolah:</label>
+              <input type="text" id="regMuridSchool" value="SDN 01 Percontohan" class="w-full px-3 py-1.5 border rounded-xl font-medium">
+            </div>
+            <button type="button" onclick="submitMuridRegister()" class="w-full py-2.5 rounded-xl btn-chunky-yellow text-stone-900 font-extrabold text-xs shadow-md mt-1">
+              Daftar & Simpan ke Sheets 🌾
+            </button>
+          </div>
+        </div>
+
+        <!-- GURU SECTION -->
+        <div id="portalGuruSection" class="hidden text-left space-y-3">
+          <div class="flex border-b pb-2 gap-3 text-xs font-bold">
+            <button type="button" onclick="setGuruSubmode('login')" id="submodeGuruLogin" class="text-emerald-800 border-b-2 border-emerald-600 pb-1">Masuk (Username & Sandi)</button>
+            <button type="button" onclick="setGuruSubmode('register')" id="submodeGuruRegister" class="text-stone-400 pb-1">Daftar Akun Guru</button>
+          </div>
+
+          <!-- Guru Login Form -->
+          <div id="formGuruLogin" class="space-y-3">
+            <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-950">
+              🔐 <strong>Akses Guru:</strong> Masuk sebagai Pendidik untuk membuka <strong>Daftar Nilai Siswa</strong>, memantau rekap hasil belajar, dan mencetak laporan asesmen.
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-stone-700 mb-1">Username / NIP Guru:</label>
+              <input type="text" id="inputGuruNip" value="GURU123" class="w-full px-3 py-2 text-xs font-bold border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-bold text-stone-700">Kata Sandi / Password Guru:</label>
+                <button type="button" onclick="toggleGuruPassVisibility()" id="btnToggleGuruPass" class="text-[11px] text-emerald-800 font-bold hover:underline">👁️ Tampilkan Sandi</button>
+              </div>
+              <div class="relative">
+                <input type="password" id="inputGuruPass" value="guru123" class="w-full px-3 py-2 text-xs font-mono border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none pr-9">
+                <button type="button" onclick="toggleGuruPassVisibility()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-stone-400 hover:text-stone-700">👁️</button>
+              </div>
+              <span class="text-[10px] text-stone-500 block mt-0.5">Password bawaan: <code class="bg-stone-100 px-1 py-0.2 rounded font-bold text-stone-800">guru123</code></span>
+            </div>
+            <button type="button" onclick="submitGuruLogin()" class="w-full py-2.5 rounded-xl btn-chunky-green text-white font-bold text-xs shadow-md">
+              Masuk sebagai Guru IPAS 👨‍🏫
+            </button>
+            <div class="text-center pt-1 text-[11px]">
+              <span class="text-stone-400">Belum punya akun Guru? </span>
+              <button type="button" onclick="setGuruSubmode('register')" class="text-emerald-700 font-bold hover:underline">Daftar Akun Baru</button>
+            </div>
+          </div>
+
+          <!-- Guru Register Form -->
+          <div id="formGuruRegister" class="hidden space-y-2.5 text-xs">
+            <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-950">
+              ✨ <strong>Pendaftaran Guru:</strong> Buat Username dan Kata Sandi baru. Data otomatis dicatat pada sheet <code>Data_Pengguna</code>.
+            </div>
+            <div>
+              <label class="block font-bold text-stone-700 mb-0.5">Username / NIP Guru:</label>
+              <input type="text" id="regGuruNip" placeholder="Contoh: bu_pertiwi atau 198501..." class="w-full px-3 py-1.5 border rounded-xl font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-stone-700 mb-0.5">Nama Lengkap & Gelar Guru:</label>
+              <input type="text" id="regGuruName" placeholder="Contoh: Dra. Siti Pertiwi, M.Pd." class="w-full px-3 py-1.5 border rounded-xl font-bold">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block font-bold text-stone-700 mb-0.5">Kata Sandi Guru:</label>
+                <input type="password" id="regGuruPass" placeholder="Min. 4 karakter" class="w-full px-3 py-1.5 border rounded-xl font-mono">
+              </div>
+              <div>
+                <label class="block font-bold text-stone-700 mb-0.5">Ulangi Sandi:</label>
+                <input type="password" id="regGuruPassConfirm" placeholder="Konfirmasi sandi" class="w-full px-3 py-1.5 border rounded-xl font-mono">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block font-bold text-stone-700 mb-0.5">Jabatan / Mapel:</label>
+                <input type="text" id="regGuruGrade" value="Guru IPAS SD" class="w-full px-3 py-1.5 border rounded-xl font-medium">
+              </div>
+              <div>
+                <label class="block font-bold text-stone-700 mb-0.5">Asal Sekolah:</label>
+                <input type="text" id="regGuruSchool" value="SDN 01 Percontohan" class="w-full px-3 py-1.5 border rounded-xl font-medium">
+              </div>
+            </div>
+            <button type="button" onclick="submitGuruRegister()" class="w-full py-2.5 rounded-xl btn-chunky-yellow text-stone-900 font-extrabold text-xs shadow-md mt-1">
+              Daftar Akun Guru & Simpan ke Sheets 👨‍🏫
+            </button>
+            <div class="text-center pt-1 text-[11px]">
+              <span class="text-stone-400">Sudah punya akun? </span>
+              <button type="button" onclick="setGuruSubmode('login')" class="text-emerald-700 font-bold hover:underline">Masuk di Sini</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KOTAK DAFTAR USERNAME & PASSWORD LOGIN (1-KLIK) -->
+        <div class="pt-3 border-t border-stone-200 text-left space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="font-rubik font-black text-xs text-stone-900 flex items-center gap-1.5">
+              <span>📋</span>
+              <span>Daftar Akun Login (Klik untuk Masuk Langsung):</span>
+            </h4>
+            <span class="text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full shadow-sm animate-pulse">⚡ 1-Klik Masuk</span>
+          </div>
+          
+          <div class="space-y-1.5 text-xs">
+            <div onclick="quickSelectAccount('Guru', 'GURU123', 'guru123')" class="p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 cursor-pointer transition flex items-center justify-between shadow-sm active:scale-[0.99] group">
+              <div>
+                <div class="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                  <span>👨‍🏫 Guru (Ibu Pertiwi, S.Pd.)</span>
+                  <span class="text-[9px] bg-amber-200 text-amber-900 font-extrabold px-1.5 py-0.2 rounded-full">Pendidik</span>
+                </div>
+                <div class="text-[11px] text-stone-600 font-mono mt-0.5">Username: <strong class="text-amber-950 font-bold">GURU123</strong> • Password: <strong class="text-amber-950 font-bold">guru123</strong></div>
+              </div>
+              <button type="button" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shadow-sm whitespace-nowrap">
+                🚀 Masuk Guru
+              </button>
+            </div>
+
+            <div onclick="quickSelectAccount('Murid', '1001', '1234')" class="p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 cursor-pointer transition flex items-center justify-between shadow-sm active:scale-[0.99] group">
+              <div>
+                <div class="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                  <span>🧑‍🌾 Murid 1 (Budi Santoso)</span>
+                  <span class="text-[9px] bg-emerald-200 text-emerald-900 font-extrabold px-1.5 py-0.2 rounded-full">Kelas 4A</span>
+                </div>
+                <div class="text-[11px] text-stone-600 font-mono mt-0.5">NIS: <strong class="text-emerald-950 font-bold">1001</strong> • PIN: <strong class="text-emerald-950 font-bold">1234</strong></div>
+              </div>
+              <button type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm whitespace-nowrap">
+                🚀 Masuk Murid
+              </button>
+            </div>
+
+            <div onclick="quickSelectAccount('Murid', '1002', '1234')" class="p-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 border-2 border-teal-300 cursor-pointer transition flex items-center justify-between shadow-sm active:scale-[0.99] group">
+              <div>
+                <div class="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                  <span>🧑‍🌾 Murid 2 (Siti Nurhaliza)</span>
+                  <span class="text-[9px] bg-teal-200 text-teal-900 font-extrabold px-1.5 py-0.2 rounded-full">Kelas 4A</span>
+                </div>
+                <div class="text-[11px] text-stone-600 font-mono mt-0.5">NIS: <strong class="text-teal-950 font-bold">1002</strong> • PIN: <strong class="text-teal-950 font-bold">1234</strong></div>
+              </div>
+              <button type="button" class="px-2.5 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] shadow-sm whitespace-nowrap">
+                🚀 Masuk Murid
+              </button>
+            </div>
+
+            <div onclick="quickSelectAccount('Murid', '1003', '1234')" class="p-2.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 border-2 border-cyan-300 cursor-pointer transition flex items-center justify-between shadow-sm active:scale-[0.99] group">
+              <div>
+                <div class="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                  <span>🧑‍🌾 Murid 3 (Ahmad Rizki)</span>
+                  <span class="text-[9px] bg-cyan-200 text-cyan-900 font-extrabold px-1.5 py-0.2 rounded-full">Kelas 5B</span>
+                </div>
+                <div class="text-[11px] text-stone-600 font-mono mt-0.5">NIS: <strong class="text-cyan-950 font-bold">1003</strong> • PIN: <strong class="text-cyan-950 font-bold">1234</strong></div>
+              </div>
+              <button type="button" class="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-[11px] shadow-sm whitespace-nowrap">
+                🚀 Masuk Murid
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. MAP SCREEN -->
+    <section id="screenMap" class="hidden relative min-h-[calc(100vh-74px)] bg-[#E8F5E9] overflow-hidden pb-16">
+      <!-- Header Banner -->
+      <div class="max-w-4xl mx-auto px-4 mt-4 mb-6">
+        <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 rounded-3xl p-5 sm:p-6 text-white shadow-lg border-4 border-emerald-400/40 relative overflow-hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-white/20 border-2 border-white/50 backdrop-blur-sm flex items-center justify-center text-3xl">
+                🧑‍🌾
+              </div>
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-bold uppercase mb-1">
+                  <span>🌾 Kurikulum Merdeka Belajar IPAS</span>
+                  <span>•</span>
+                  <span id="bannerRoleLabel">Murid (NIS: 1001)</span>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black font-fredoka leading-tight">
+                  Halo, <span id="bannerStudentName">Budi Santoso</span>!
+                </h1>
+                <p class="text-xs sm:text-sm text-emerald-100 font-medium">
+                  Selesaikan 5 misi pertanian nusantara & catat skor otomatis ke Spreadsheet!
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 self-start sm:self-center">
+              <div class="bg-black/25 backdrop-blur-sm px-4 py-2 rounded-2xl border border-white/20 text-center min-w-[85px]">
+                <div class="text-[10px] uppercase font-bold text-amber-300">Total Bintang</div>
+                <div class="text-xl font-extrabold text-white flex items-center justify-center gap-1">
+                  <span>⭐</span>
+                  <span id="bannerStars">4/15</span>
+                </div>
+              </div>
+              <button onclick="openModal('modalRapor')" class="bg-amber-400 hover:bg-amber-300 text-stone-900 px-3.5 py-3 rounded-2xl text-xs font-black shadow-md transition flex flex-col items-center">
+                <span>📜</span>
+                <span>Rapor</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Level Cards Grid -->
+      <div class="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Level 1 -->
+        <div onclick="startLevel(1)" class="bg-white rounded-3xl p-5 border-4 border-emerald-400 shadow-md hover:-translate-y-1 transition cursor-pointer">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
+              🌱 Misi 1 • Fase B
+            </span>
+            <span id="starBadge1" class="text-xs font-bold text-amber-500">⭐⭐⭐</span>
+          </div>
+          <h3 class="text-base font-bold font-fredoka text-stone-900">Level 1: Kenali Organ & Bibit Pangan</h3>
+          <p class="text-xs text-stone-500 mt-1">Kuis sains organ tumbuhan (akar, batang, daun, bunga) dan biji makanan pokok unggul.</p>
+          <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-emerald-700">Skor: <span id="highScore1">420</span></span>
+            <button class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-xs">Mainkan ▶</button>
+          </div>
+        </div>
+
+        <!-- Level 2 -->
+        <div onclick="startLevel(2)" class="bg-white rounded-3xl p-5 border-4 border-blue-400 shadow-md hover:-translate-y-1 transition cursor-pointer">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-blue-100 text-blue-800">
+              💧 Misi 2 • Fase B & C
+            </span>
+            <span id="starBadge2" class="text-xs font-bold text-amber-500">⭐☆☆</span>
+          </div>
+          <h3 class="text-base font-bold font-fredoka text-stone-900">Level 2: Olah Tanah & Nutrisi Tumbuhan</h3>
+          <p class="text-xs text-stone-500 mt-1">Simulasi fotosintesis! Jaga keseimbangan kadar air, kompos organik, sinar surya, dan aerasi cacing tanah.</p>
+          <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-blue-700">Skor: <span id="highScore2">360</span></span>
+            <button class="px-3.5 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-xs">Mainkan ▶</button>
+          </div>
+        </div>
+
+        <!-- Level 3 -->
+        <div onclick="startLevel(3)" class="bg-white rounded-3xl p-5 border-4 border-amber-400 shadow-md hover:-translate-y-1 transition cursor-pointer">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-amber-100 text-amber-800">
+              🐞 Misi 3 • Fase C
+            </span>
+            <span id="starBadge3" class="text-xs font-bold text-stone-300">☆☆☆</span>
+          </div>
+          <h3 class="text-base font-bold font-fredoka text-stone-900">Level 3: Basmi Hama Sahabat Petani</h3>
+          <p class="text-xs text-stone-500 mt-1">Tangkap wereng & ulat! Hati-hati jangan semprot lebah penyerbuk dan kepik sahabat petani!</p>
+          <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-700">Skor: <span id="highScore3">0</span></span>
+            <button class="px-3.5 py-1.5 rounded-xl bg-amber-600 text-white font-bold text-xs shadow-xs">Mainkan ▶</button>
+          </div>
+        </div>
+
+        <!-- Level 4 -->
+        <div onclick="startLevel(4)" class="bg-white rounded-3xl p-5 border-4 border-orange-400 shadow-md hover:-translate-y-1 transition cursor-pointer">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-orange-100 text-orange-800">
+              🌽 Misi 4 • Fase B & C
+            </span>
+            <span id="starBadge4" class="text-xs font-bold text-stone-300">☆☆☆</span>
+          </div>
+          <h3 class="text-base font-bold font-fredoka text-stone-900">Level 4: Panen Raya & Pasar Tani</h3>
+          <p class="text-xs text-stone-500 mt-1">Petik sayur buah segar dan hitung keuntungan modal tani di pasar desa!</p>
+          <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-orange-700">Skor: <span id="highScore4">0</span></span>
+            <button class="px-3.5 py-1.5 rounded-xl bg-orange-600 text-white font-bold text-xs shadow-xs">Mainkan ▶</button>
+          </div>
+        </div>
+
+        <!-- Level 5 -->
+        <div onclick="startLevel(5)" class="bg-white rounded-3xl p-5 border-4 border-teal-500 shadow-md hover:-translate-y-1 transition cursor-pointer md:col-span-2">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center gap-1 text-[11px] font-extrabold px-3 py-1 rounded-full bg-teal-100 text-teal-800">
+              🌊 Misi 5 (Spesial UNESCO) • Fase C
+            </span>
+            <span id="starBadge5" class="text-xs font-bold text-stone-300">☆☆☆</span>
+          </div>
+          <h3 class="text-base font-bold font-fredoka text-stone-900">Level 5: Irigasi Subak & Ekosistem Sawah</h3>
+          <p class="text-xs text-stone-500 mt-1">Atur pembagian debit pintu air 3 petak terasering subak dan jaga rantai makanan sawah dari kepunahan predator!</p>
+          <div class="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-teal-700">Skor: <span id="highScore5">0</span></span>
+            <button class="px-3.5 py-1.5 rounded-xl bg-teal-600 text-white font-bold text-xs shadow-xs">Mainkan ▶</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. GAMEPLAY LEVEL 1: QUIZ -->
+    <section id="screenLevel1" class="hidden max-w-2xl mx-auto px-4 py-8 w-full">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-emerald-400 space-y-6">
+        <div class="flex items-center justify-between border-b pb-4">
+          <div>
+            <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full uppercase">Level 1 • Organ & Bibit</span>
+            <h2 class="text-xl font-black font-fredoka text-stone-900 mt-1">Uji Pemahaman Sains Tumbuhan</h2>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] font-bold text-stone-400">WAKTU</div>
+            <div id="q1Timer" class="text-xl font-mono font-bold text-emerald-800">30s</div>
+          </div>
+        </div>
+
+        <div class="text-center py-4 bg-emerald-50 rounded-2xl border border-emerald-200">
+          <div id="q1Illustration" class="text-6xl mb-3">🌱</div>
+          <p id="q1Text" class="text-sm sm:text-base font-bold text-stone-800 px-4 leading-relaxed">
+            Pertanyaan dimuat...
+          </p>
+        </div>
+
+        <div id="q1Options" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+    <!-- 3. GAMEPLAY LEVEL 2: SOIL & PHOTOSYNTHESIS -->
+    <section id="screenLevel2" class="hidden max-w-2xl mx-auto px-4 py-6 w-full">
+      <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-blue-400 space-y-5">
+        <div class="flex items-center justify-between border-b pb-3">
+          <div>
+            <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full uppercase">Level 2 • Nutrisi & Tanah</span>
+            <h2 class="text-lg font-black font-fredoka text-stone-900">Simulasi Tumbuh Kembang Padi</h2>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] font-bold text-stone-400">SISA WAKTU</div>
+            <div id="l2Timer" class="text-xl font-mono font-bold text-blue-800">30s</div>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded-2xl border border-blue-200 text-center">
+          <div class="text-xs font-bold text-stone-600 mb-1">Pertumbuhan Bibit Padi: <span id="l2GrowthVal" class="text-emerald-800 font-extrabold">20%</span></div>
+          <div class="w-full h-4 bg-stone-200 rounded-full overflow-hidden">
+            <div id="l2GrowthBar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 20%"></div>
+          </div>
+          <div id="l2PlantEmoji" class="text-5xl mt-3 animate-bounce">🌱</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="p-3 bg-stone-50 rounded-2xl border">
+            <div class="flex justify-between font-bold mb-1"><span>💧 Air:</span><span id="valAir">60%</span></div>
+            <button onclick="adjustL2Factor('air')" class="w-full py-2 rounded-xl btn-chunky-blue text-white font-bold text-xs">Siram Air (+15%)</button>
+          </div>
+          <div class="p-3 bg-stone-50 rounded-2xl border">
+            <div class="flex justify-between font-bold mb-1"><span>🍂 Kompos:</span><span id="valKompos">55%</span></div>
+            <button onclick="adjustL2Factor('kompos')" class="w-full py-2 rounded-xl btn-chunky-green text-white font-bold text-xs">Beri Kompos (+15%)</button>
+          </div>
+          <div class="p-3 bg-stone-50 rounded-2xl border">
+            <div class="flex justify-between font-bold mb-1"><span>🪱 Aerasi Tanah:</span><span id="valAerasi">65%</span></div>
+            <button onclick="adjustL2Factor('aerasi')" class="w-full py-2 rounded-xl btn-chunky-yellow text-stone-900 font-bold text-xs">Cangkul Gembur (+15%)</button>
+          </div>
+          <div class="p-3 bg-stone-50 rounded-2xl border">
+            <div class="flex justify-between font-bold mb-1"><span>☀️ Cahaya:</span><span id="valSurya">50%</span></div>
+            <button onclick="adjustL2Factor('surya')" class="w-full py-2 rounded-xl bg-amber-400 text-stone-900 font-bold text-xs py-2 rounded-xl">Buka Teduhan</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. GAMEPLAY LEVEL 3: WHACK A PEST -->
+    <section id="screenLevel3" class="hidden max-w-xl mx-auto px-4 py-6 w-full text-center">
+      <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-amber-400 space-y-4">
+        <div class="flex items-center justify-between border-b pb-3 text-left">
+          <div>
+            <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full uppercase">Level 3 • Hama vs Sahabat</span>
+            <h2 class="text-lg font-black font-fredoka text-stone-900">Tangkap Wereng & Ulat!</h2>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] font-bold text-stone-400">SKOR</div>
+            <div id="l3Score" class="text-xl font-mono font-bold text-amber-800">0</div>
+          </div>
+        </div>
+
+        <p class="text-xs text-stone-500 font-medium">
+          Klik hama wereng (🦗) & ulat (🐛)! <strong>JANGAN</strong> klik lebah (🐝) atau kepik (🐞)!
+        </p>
+
+        <div class="grid grid-cols-3 gap-3 my-4">
+          <div onclick="hitHole(0)" id="hole0" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(1)" id="hole1" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(2)" id="hole2" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(3)" id="hole3" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(4)" id="hole4" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(5)" id="hole5" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(6)" id="hole6" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(7)" id="hole7" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+          <div onclick="hitHole(8)" id="hole8" class="h-24 bg-stone-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner cursor-pointer hover:bg-stone-700 transition"></div>
+        </div>
+
+        <div class="text-xs font-mono text-stone-600">Sisa Waktu: <span id="l3Timer" class="font-bold">25s</span></div>
+      </div>
+    </section>
+
+    <!-- 5. GAMEPLAY LEVEL 4: HARVEST & MARKET MATH -->
+    <section id="screenLevel4" class="hidden max-w-xl mx-auto px-4 py-6 w-full">
+      <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-orange-400 space-y-4">
+        <div class="border-b pb-3 flex justify-between items-center">
+          <div>
+            <span class="text-[10px] font-bold bg-orange-100 text-orange-800 px-3 py-1 rounded-full uppercase">Level 4 • Panen & Pasar</span>
+            <h2 class="text-lg font-black font-fredoka text-stone-900">Hitung Keuntungan Hasil Kebun</h2>
+          </div>
+          <div id="l4ScoreDisplay" class="text-lg font-bold font-mono text-orange-800">Skor: 0</div>
+        </div>
+        <div id="l4Content" class="space-y-4"></div>
+      </div>
+    </section>
+
+    <!-- 6. GAMEPLAY LEVEL 5: SUBAK IRRIGATION -->
+    <section id="screenLevel5" class="hidden max-w-3xl mx-auto px-4 py-6 w-full">
+      <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-teal-500 space-y-5">
+        <div class="flex justify-between items-center border-b pb-3">
+          <div>
+            <span class="text-[10px] font-bold bg-teal-100 text-teal-800 px-3 py-1 rounded-full uppercase">Level 5 • Subak & Ekosistem</span>
+            <h2 class="text-lg font-black font-fredoka text-stone-900">Manajemen Air Sawah Terasering</h2>
+          </div>
+          <div class="text-right">
+            <div class="text-[10px] font-bold text-stone-400">WAKTU</div>
+            <div id="l5Timer" class="text-xl font-mono font-bold text-teal-800">20s</div>
+          </div>
+        </div>
+
+        <p class="text-xs text-stone-600">
+          Jaga debit air di ketiga petak sawah bertingkat agar tetap berada di <strong>Zona Hijau (40% - 80%)</strong>!
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-stone-50 p-4 rounded-2xl border text-center space-y-2">
+            <div class="font-bold text-xs text-stone-700">1. Petak Hulu</div>
+            <div class="h-20 bg-stone-200 rounded-xl overflow-hidden relative border flex flex-col justify-end">
+              <div id="gaugeHulu" class="bg-teal-500 w-full transition-all duration-300" style="height: 50%"></div>
+            </div>
+            <div id="valHulu" class="text-xs font-mono font-bold text-teal-900">50%</div>
+            <button onclick="toggleSubakGate('hulu')" class="w-full py-1.5 rounded-xl bg-teal-600 text-white font-bold text-xs">Pintu: Sedang</button>
+          </div>
+
+          <div class="bg-stone-50 p-4 rounded-2xl border text-center space-y-2">
+            <div class="font-bold text-xs text-stone-700">2. Petak Tengah</div>
+            <div class="h-20 bg-stone-200 rounded-xl overflow-hidden relative border flex flex-col justify-end">
+              <div id="gaugeTengah" class="bg-teal-500 w-full transition-all duration-300" style="height: 45%"></div>
+            </div>
+            <div id="valTengah" class="text-xs font-mono font-bold text-teal-900">45%</div>
+            <button onclick="toggleSubakGate('tengah')" class="w-full py-1.5 rounded-xl bg-teal-600 text-white font-bold text-xs">Pintu: Sedang</button>
+          </div>
+
+          <div class="bg-stone-50 p-4 rounded-2xl border text-center space-y-2">
+            <div class="font-bold text-xs text-stone-700">3. Petak Hilir</div>
+            <div class="h-20 bg-stone-200 rounded-xl overflow-hidden relative border flex flex-col justify-end">
+              <div id="gaugeHilir" class="bg-teal-500 w-full transition-all duration-300" style="height: 40%"></div>
+            </div>
+            <div id="valHilir" class="text-xs font-mono font-bold text-teal-900">40%</div>
+            <button onclick="toggleSubakGate('hilir')" class="w-full py-1.5 rounded-xl bg-teal-600 text-white font-bold text-xs">Pintu: Sedang</button>
+          </div>
+        </div>
+
+        <div class="text-center font-bold text-xs text-emerald-800">
+          Skor Irigasi: <span id="l5Score" class="font-mono text-base">0</span> Poin
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. KHUSUS GURU: DAFTAR NILAI & REKAP KELAS (GRADEBOOK) -->
+    <section id="screenGradebook" class="hidden max-w-6xl mx-auto px-4 py-8 w-full space-y-5">
+      <!-- Authorization guard will check role -->
+      <div id="gradebookAccessDenied" class="hidden bg-white p-8 rounded-3xl border-4 border-rose-400 text-center max-w-md mx-auto space-y-3">
+        <div class="text-5xl">⛔</div>
+        <h3 class="text-xl font-black font-fredoka text-rose-900">Akses Ditolak: Khusus Akun Guru</h3>
+        <p class="text-xs text-stone-600 leading-relaxed">
+          Halaman <strong>Daftar Nilai Siswa</strong> bersifat rahasia dan hanya dapat diakses oleh Akun Pendidik (Guru).
+        </p>
+        <button onclick="navigateTo('map')" class="px-5 py-2 rounded-xl bg-emerald-700 text-white font-bold text-xs">
+          ← Kembali ke Peta
+        </button>
+      </div>
+
+      <div id="gradebookContent" class="space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-3xl border-2 border-stone-200 shadow-xs">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">📋</span>
+              <h2 class="text-lg font-black font-fredoka text-emerald-950">Daftar Nilai Siswa (Panel Khusus Guru)</h2>
+            </div>
+            <p class="text-xs text-stone-500 font-medium">Rekapitulasi evaluasi Kurikulum Merdeka IPAS tersinkron otomatis ke Google Spreadsheet</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="renderGradebookData()" class="px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-xs flex items-center gap-1 transition">
+              <span>🔄 Refresh</span>
+            </button>
+            <button onclick="downloadGradebookCSV()" class="px-3.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold text-xs flex items-center gap-1 transition">
+              <span>📥 Unduh CSV</span>
+            </button>
+            <button onclick="window.print()" class="px-3.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 font-bold text-xs flex items-center gap-1 transition">
+              <span>🖨️ Cetak</span>
+            </button>
+            <button onclick="navigateTo('map')" class="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs">
+              <span>← Peta Misi</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Gradebook KPI Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div class="bg-white p-4 rounded-2xl border shadow-xs">
+            <span class="text-[10px] uppercase font-bold text-stone-400 block">Total Murid</span>
+            <span id="kpiTotalSiswa" class="text-xl font-black font-fredoka text-stone-900">4 Siswa</span>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border shadow-xs">
+            <span class="text-[10px] uppercase font-bold text-stone-400 block">Total Sesi Permainan</span>
+            <span id="kpiTotalSesi" class="text-xl font-black font-fredoka text-emerald-800">12 Misi</span>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border shadow-xs">
+            <span class="text-[10px] uppercase font-bold text-stone-400 block">Rata-rata Skor</span>
+            <span id="kpiAvgScore" class="text-xl font-black font-fredoka text-blue-800">425 Pts</span>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border shadow-xs">
+            <span class="text-[10px] uppercase font-bold text-stone-400 block">Tuntas KKM</span>
+            <span id="kpiPassRate" class="text-xl font-black font-fredoka text-amber-600">88%</span>
+          </div>
+        </div>
+
+        <!-- Gradebook Table Card -->
+        <div class="bg-white p-5 rounded-3xl border-2 border-stone-200 shadow-xs space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-stone-600">Filter Kelas:</span>
+              <select id="filterGradebookClass" onchange="renderGradebookData()" class="px-2.5 py-1.5 border rounded-xl bg-white font-medium">
+                <option value="all">Semua Kelas</option>
+                <option value="4A">Kelas 4A</option>
+                <option value="4B">Kelas 4B</option>
+                <option value="5A">Kelas 5A</option>
+                <option value="5B">Kelas 5B</option>
+                <option value="6">Kelas 6</option>
+              </select>
+            </div>
+            <input type="text" id="searchGradebook" oninput="renderGradebookData()" placeholder="Cari Siswa atau NIS..." class="px-3 py-1.5 border rounded-xl text-xs w-48 sm:w-60">
+          </div>
+
+          <div class="border rounded-2xl overflow-x-auto shadow-inner bg-white">
+            <table class="w-full text-left text-xs min-w-[760px]">
+              <thead class="bg-emerald-800 text-white font-bold">
+                <tr>
+                  <th class="py-2.5 px-3 text-center w-12">#</th>
+                  <th class="py-2.5 px-3">Waktu</th>
+                  <th class="py-2.5 px-3">NIS</th>
+                  <th class="py-2.5 px-3">Nama Siswa</th>
+                  <th class="py-2.5 px-3">Kelas</th>
+                  <th class="py-2.5 px-3">Misi Level</th>
+                  <th class="py-2.5 px-3 text-center">Skor</th>
+                  <th class="py-2.5 px-3 text-center">Bintang</th>
+                  <th class="py-2.5 px-3 text-center">Status</th>
+                  <th class="py-2.5 px-3">Lencana</th>
+                </tr>
+              </thead>
+              <tbody id="gradebookTableBody" class="divide-y">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. LEADERBOARD SCREEN -->
+    <section id="screenLeaderboard" class="hidden max-w-3xl mx-auto px-4 py-8 w-full">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-amber-300 space-y-6">
+        <div class="flex items-center justify-between border-b pb-4">
+          <button onclick="navigateTo('map')" class="text-xs font-bold text-stone-600 hover:text-stone-900">← Kembali ke Peta</button>
+          <button onclick="refreshLeaderboardOnline()" class="text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-xl hover:bg-emerald-200 transition">
+            🔄 Refresh dari Sheets
+          </button>
+        </div>
+
+        <div class="text-center">
+          <div class="text-4xl mb-2">🏆</div>
+          <h2 class="text-2xl font-black font-fredoka text-stone-900">Papan Peringkat Tani Cilik</h2>
+          <p class="text-xs text-stone-500 font-medium mt-1">Data tersinkron otomatis dengan Google Spreadsheet Kelas</p>
+        </div>
+
+        <div class="border rounded-2xl overflow-hidden shadow-xs">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-emerald-700 text-white font-bold">
+              <tr>
+                <th class="py-2.5 px-3 text-center">Rank</th>
+                <th class="py-2.5 px-3">Nama Siswa</th>
+                <th class="py-2.5 px-3 text-center">Total Skor</th>
+                <th class="py-2.5 px-3 text-center">Bintang</th>
+                <th class="py-2.5 px-3">Lencana</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardRows" class="divide-y bg-white"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. SHOP SCREEN -->
+    <section id="screenShop" class="hidden max-w-3xl mx-auto px-4 py-8 w-full">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-emerald-400 space-y-6">
+        <div class="flex justify-between items-center border-b pb-4">
+          <button onclick="navigateTo('map')" class="text-xs font-bold text-stone-600">← Kembali ke Peta</button>
+          <div class="text-xs font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-full">
+            Koin Anda: 🪙 <span id="shopUserCoins">180</span>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <div class="text-4xl mb-1">🤠</div>
+          <h2 class="text-2xl font-black font-fredoka text-stone-900">Toko Caping & Perlengkapan Tani</h2>
+          <p class="text-xs text-stone-500">Gunakan koin hasil panen untuk membeli caping keren khas nusantara!</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div class="p-4 border rounded-2xl text-center space-y-2 bg-stone-50">
+            <div class="text-4xl">🤠</div>
+            <div class="font-bold text-sm">Caping Bambu Klasik</div>
+            <p class="text-[11px] text-stone-500">Anyaman bambu alami khas petani desa nusantara.</p>
+            <button onclick="equipCaping('🤠', 'Caping Bambu')" class="w-full py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs">Pakai Caping</button>
+          </div>
+          <div class="p-4 border rounded-2xl text-center space-y-2 bg-stone-50">
+            <div class="text-4xl">👒</div>
+            <div class="font-bold text-sm">Caping Batik Ceria</div>
+            <p class="text-[11px] text-stone-500">Caping motif batik warisan seni luhur Indonesia.</p>
+            <button onclick="buyCaping('👒', 'Caping Batik', 50)" class="w-full py-1.5 rounded-xl bg-amber-500 text-stone-900 font-bold text-xs">Beli (🪙 50)</button>
+          </div>
+          <div class="p-4 border rounded-2xl text-center space-y-2 bg-stone-50">
+            <div class="text-4xl">👑</div>
+            <div class="font-bold text-sm">Caping Emas Juara</div>
+            <p class="text-[11px] text-stone-500">Mahkota emas kehormatan untuk petani cilik teladan.</p>
+            <button onclick="buyCaping('👑', 'Caping Emas', 100)" class="w-full py-1.5 rounded-xl bg-amber-500 text-stone-900 font-bold text-xs">Beli (🪙 100)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: RESULT CELEBRATION -->
+  <div id="modalResult" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border-4 border-emerald-400 space-y-4 animate-in zoom-in">
+      <div class="text-5xl">🎉</div>
+      <h3 id="resLevelTitle" class="text-xl font-black font-fredoka text-stone-900">Misi Selesai!</h3>
+      <div id="resStars" class="text-4xl text-amber-500 my-2">⭐⭐⭐</div>
+      <div class="grid grid-cols-2 gap-2 bg-stone-50 p-3 rounded-2xl border text-xs">
+        <div><span class="text-stone-400 font-bold block">SKOR</span><span id="resScore" class="text-lg font-black text-emerald-800">420</span></div>
+        <div><span class="text-stone-400 font-bold block">KOIN</span><span id="resCoins" class="text-lg font-black text-amber-600">+45</span></div>
+      </div>
+      <div id="resSyncStatus" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
+        ✅ Tersinkron otomatis ke Google Sheets!
+      </div>
+      <button onclick="closeModal('modalResult'); navigateTo('map');" class="w-full py-2.5 rounded-xl btn-chunky-green text-white font-bold text-xs">
+        Lanjut ke Peta ▶
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: BUKU MATERI IPAS -->
+  <div id="modalMateri" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border-4 border-emerald-500 overflow-hidden">
+      <div class="bg-emerald-700 p-4 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📖</span>
+          <h3 class="font-black font-fredoka text-base">Buku Saku Materi IPAS: Petani Cilik</h3>
+        </div>
+        <button onclick="closeModal('modalMateri')" class="w-7 h-7 rounded-full bg-white/20 font-bold text-sm">✕</button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-3.5 text-xs text-stone-700 flex-1">
+        <div class="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200">
+          <h4 class="font-bold text-emerald-950 mb-1">🌱 1. Organ Tumbuhan (Fase B)</h4>
+          <p>Akar menyerap air & unsur hara tanah. Batang mengalirkan cairan via pembuluh xilem & floem. Daun memasak makanan via fotosintesis dengan klorofil.</p>
+        </div>
+        <div class="bg-blue-50 p-3.5 rounded-2xl border border-blue-200">
+          <h4 class="font-bold text-blue-950 mb-1">☀️ 2. Kebutuhan Fotosintesis (Fase B & C)</h4>
+          <p>Rumus sederhana: <strong>Air + Karbon Dioksida + Cahaya Matahari ➔ Glukosa + Oksigen</strong>. Cacing tanah membantu menggemburkan pori-pori tanah (aerasi).</p>
+        </div>
+        <div class="bg-amber-50 p-3.5 rounded-2xl border border-amber-200">
+          <h4 class="font-bold text-amber-950 mb-1">🐞 3. Pengendalian Hama Ramah Lingkungan (Fase C)</h4>
+          <p>Kepik koksi adalah predator alami kutu daun. Lebah membantu penyerbukan bunga. Pengendalian hama terpadu mengurangi pemakaian racun kimia.</p>
+        </div>
+        <div class="bg-teal-50 p-3.5 rounded-2xl border border-teal-200">
+          <h4 class="font-bold text-teal-950 mb-1">🌊 4. Irigasi Subak & Ekosistem Sawah (Fase C)</h4>
+          <p>Subak adalah kearifan lokal Bali diakui UNESCO untuk pembagian air adil. Rantai makanan sawah: Padi ➔ Tikus ➔ Ular ➔ Elang ➔ Cacing Pengurai.</p>
+        </div>
+      </div>
+      <div class="p-3 bg-stone-100 border-t flex justify-end">
+        <button onclick="closeModal('modalMateri')" class="px-5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RAPOR & SERTIFIKAT SISWA (PRINTABLE) -->
+  <div id="modalRapor" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border-4 border-emerald-600 overflow-hidden my-auto">
+      <div class="no-print bg-emerald-800 text-white px-5 py-3 flex items-center justify-between">
+        <span class="font-bold text-xs flex items-center gap-1.5">📜 Rapor & Sertifikat Evaluasi IPAS</span>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="px-3 py-1 bg-amber-400 text-stone-900 rounded-xl font-bold text-xs">🖨️ Cetak / PDF</button>
+          <button onclick="closeModal('modalRapor')" class="w-7 h-7 rounded-full bg-white/20 font-bold text-xs">✕</button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-4 text-stone-800">
+        <div class="text-center border-b pb-3">
+          <div class="text-[10px] font-bold uppercase text-emerald-800 bg-emerald-100 px-3 py-0.5 rounded-full inline-block">Kurikulum Merdeka IPAS SD</div>
+          <h2 class="text-xl sm:text-2xl font-black font-fredoka text-emerald-900 uppercase mt-1">Sertifikat Petani Cilik</h2>
+          <p class="text-[11px] text-stone-500">Pencatatan Otomatis Evaluasi Belajar Siswa Berbasis Game & Google Sheets</p>
+        </div>
+
+        <div class="bg-stone-50 p-3 rounded-xl border text-xs grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div><span class="text-stone-400 block text-[9px] uppercase font-bold">Nama</span><strong id="raporName">Budi Santoso</strong></div>
+          <div><span class="text-stone-400 block text-[9px] uppercase font-bold">NIS / NIP</span><strong id="raporNisn">1001</strong></div>
+          <div><span class="text-stone-400 block text-[9px] uppercase font-bold">Sekolah</span><strong id="raporSchool">SDN 01 Percontohan</strong></div>
+          <div><span class="text-stone-400 block text-[9px] uppercase font-bold">Kelas</span><strong id="raporGrade">Kelas 4A</strong></div>
+        </div>
+
+        <table class="w-full text-xs text-left border rounded-xl overflow-hidden">
+          <thead class="bg-emerald-700 text-white">
+            <tr>
+              <th class="p-2">No</th>
+              <th class="p-2">Misi IPAS</th>
+              <th class="p-2 text-center">Fase</th>
+              <th class="p-2 text-center">Skor</th>
+              <th class="p-2 text-center">Bintang</th>
+            </tr>
+          </thead>
+          <tbody id="raporTableBody" class="divide-y"></tbody>
+        </table>
+
+        <div class="pt-3 border-t flex justify-between items-end text-[10px] text-stone-500">
+          <div>
+            <p class="font-bold text-emerald-800">✅ Terverifikasi Database Google Spreadsheet</p>
+            <p id="raporPrintDate">Tanggal: 03 Oktober 2026</p>
+          </div>
+          <div class="text-center">
+            <p class="mb-6">Guru Pengampu IPAS:</p>
+            <p class="border-t font-bold text-stone-800 pt-0.5">( Guru Kelas SD )</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT GAME & DATABASE ENGINE -->
+  <script>
+    // State management with Role (Guru / Murid)
+    const state = {
+      isLoggedIn: false,
+      user: {
+        id: 'SISWA-01',
+        role: 'Murid',
+        nis: '1001',
+        name: 'Budi Santoso',
+        email: 'budi.santoso@belajar.id',
+        school: 'SDN 01 Percontohan',
+        grade: 'Kelas 4A',
+        coins: 180,
+        stars: 4,
+        totalScore: 780,
+        caping: '🤠'
+      },
+      scores: {
+        1: { stars: 3, highScore: 420 },
+        2: { stars: 1, highScore: 360 },
+        3: { stars: 0, highScore: 0 },
+        4: { stars: 0, highScore: 0 },
+        5: { stars: 0, highScore: 0 }
+      },
+      audioMuted: false
+    };
+
+    // Synthesizer Web Audio API
+    let audioCtx = null;
+    function playBeep(freq = 440, duration = 0.1, type = 'sine') {
+      if (state.audioMuted) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      state.audioMuted = !state.audioMuted;
+      document.getElementById('btnAudioToggle').innerText = state.audioMuted ? '🔇' : '🔊';
+    }
+
+    // Role Tab Switcher in Login
+    let currentRoleTab = 'Murid';
+    function setRoleTab(role) {
+      playBeep(400, 0.05);
+      currentRoleTab = role;
+      hideAlert();
+      if (role === 'Murid') {
+        document.getElementById('tabBtnMurid').className = 'flex-1 py-2 rounded-xl bg-emerald-700 text-white shadow-xs transition';
+        document.getElementById('tabBtnGuru').className = 'flex-1 py-2 rounded-xl text-stone-600 hover:text-stone-900 transition';
+        document.getElementById('portalMuridSection').classList.remove('hidden');
+        document.getElementById('portalGuruSection').classList.add('hidden');
+        document.getElementById('loginMascot').innerText = '🧑‍🌾';
+      } else {
+        document.getElementById('tabBtnGuru').className = 'flex-1 py-2 rounded-xl bg-emerald-700 text-white shadow-xs transition';
+        document.getElementById('tabBtnMurid').className = 'flex-1 py-2 rounded-xl text-stone-600 hover:text-stone-900 transition';
+        document.getElementById('portalGuruSection').classList.remove('hidden');
+        document.getElementById('portalMuridSection').classList.add('hidden');
+        document.getElementById('loginMascot').innerText = '👨‍🏫';
+      }
+    }
+
+    function setMuridSubmode(mode) {
+      playBeep(350, 0.05);
+      hideAlert();
+      if (mode === 'login') {
+        document.getElementById('submodeBtnLogin').className = 'text-emerald-800 border-b-2 border-emerald-600 pb-1 font-bold';
+        document.getElementById('submodeBtnRegister').className = 'text-stone-400 pb-1 font-medium';
+        document.getElementById('formMuridLogin').classList.remove('hidden');
+        document.getElementById('formMuridRegister').classList.add('hidden');
+      } else {
+        document.getElementById('submodeBtnRegister').className = 'text-emerald-800 border-b-2 border-emerald-600 pb-1 font-bold';
+        document.getElementById('submodeBtnLogin').className = 'text-stone-400 pb-1 font-medium';
+        document.getElementById('formMuridRegister').classList.remove('hidden');
+        document.getElementById('formMuridLogin').classList.add('hidden');
+      }
+    }
+
+    function setGuruSubmode(mode) {
+      playBeep(350, 0.05);
+      hideAlert();
+      if (mode === 'login') {
+        document.getElementById('submodeGuruLogin').className = 'text-emerald-800 border-b-2 border-emerald-600 pb-1 font-bold';
+        document.getElementById('submodeGuruRegister').className = 'text-stone-400 pb-1 font-medium';
+        document.getElementById('formGuruLogin').classList.remove('hidden');
+        document.getElementById('formGuruRegister').classList.add('hidden');
+      } else {
+        document.getElementById('submodeGuruRegister').className = 'text-emerald-800 border-b-2 border-emerald-600 pb-1 font-bold';
+        document.getElementById('submodeGuruLogin').className = 'text-stone-400 pb-1 font-medium';
+        document.getElementById('formGuruRegister').classList.remove('hidden');
+        document.getElementById('formGuruLogin').classList.add('hidden');
+      }
+    }
+
+    function toggleMuridPinVisibility() {
+      const input = document.getElementById('inputMuridPin');
+      const btn = document.getElementById('btnToggleMuridPin');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerText = '🙈 Sembunyikan';
+      } else {
+        input.type = 'password';
+        btn.innerText = '👁️ Tampilkan Sandi';
+      }
+    }
+
+    function toggleGuruPassVisibility() {
+      const input = document.getElementById('inputGuruPass');
+      const btn = document.getElementById('btnToggleGuruPass');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerText = '🙈 Sembunyikan';
+      } else {
+        input.type = 'password';
+        btn.innerText = '👁️ Tampilkan Sandi';
+      }
+    }
+
+    function quickSelectAccount(role, username, pass) {
+      playBeep(520, 0.08);
+      setRoleTab(role);
+      if (role === 'Guru') {
+        setGuruSubmode('login');
+        document.getElementById('inputGuruNip').value = username;
+        document.getElementById('inputGuruPass').value = pass;
+        showAlert('Memverifikasi & masuk sebagai Guru (' + username + ')...', false);
+        setTimeout(function() {
+          submitGuruLogin();
+        }, 120);
+      } else {
+        setMuridSubmode('login');
+        document.getElementById('inputMuridNis').value = username;
+        document.getElementById('inputMuridPin').value = pass;
+        showAlert('Memverifikasi & masuk sebagai Murid (NIS: ' + username + ')...', false);
+        setTimeout(function() {
+          submitMuridLogin();
+        }, 120);
+      }
+    }
+
+    function showAlert(msg, isError) {
+      const el = document.getElementById('loginAlert');
+      el.className = isError 
+        ? 'p-2.5 rounded-xl text-xs font-bold text-left border bg-rose-50 text-rose-800 border-rose-300' 
+        : 'p-2.5 rounded-xl text-xs font-bold text-left border bg-emerald-50 text-emerald-900 border-emerald-300';
+      el.innerHTML = (isError ? '⚠️ ' : '✅ ') + msg;
+      el.classList.remove('hidden');
+    }
+    function hideAlert() {
+      document.getElementById('loginAlert').classList.add('hidden');
+    }
+
+    // LOGIN & REGISTER ACTIONS
+    function submitMuridLogin() {
+      const nis = document.getElementById('inputMuridNis').value.trim();
+      const pin = document.getElementById('inputMuridPin').value.trim();
+      if (!nis) return showAlert('Silakan masukkan NIS!', true);
+
+      showAlert('Memverifikasi akun siswa di Google Spreadsheet...', false);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.success && res.user) {
+              loginSuccess(res.user);
+            } else if (nis === '1001' || nis === '1002' || nis === '1003') {
+              localMuridLogin(nis, pin);
+            } else {
+              showAlert(res?.message || 'NIS tidak ditemukan di Google Sheets.', true);
+            }
+          })
+          .withFailureHandler((err) => {
+            localMuridLogin(nis, pin);
+          })
+          .apiLoginUser({ role: 'Murid', nis: nis, password: pin });
+      } else {
+        localMuridLogin(nis, pin);
+      }
+    }
+
+    function localMuridLogin(nis, pin) {
+      if (nis === '1001' || nis === '1002' || nis === '1003') {
+        const names = { '1001': 'Budi Santoso', '1002': 'Siti Nurhaliza', '1003': 'Ahmad Rizki' };
+        loginSuccess({
+          id: 'SISWA-' + nis,
+          role: 'Murid',
+          nis: nis,
+          name: names[nis] || 'Murid ' + nis,
+          school: 'SDN 01 Percontohan',
+          grade: 'Kelas 4A',
+          coins: 200,
+          stars: 5,
+          totalScore: 800,
+          capingStyle: 'caping_bambu'
+        });
+      } else {
+        showAlert('NIS ' + nis + ' belum terdaftar. Silakan klik "Daftar Murid Baru"!', true);
+      }
+    }
+
+    function submitMuridRegister() {
+      const nis = document.getElementById('regMuridNis').value.trim();
+      const name = document.getElementById('regMuridName').value.trim();
+      const grade = document.getElementById('regMuridGrade').value;
+      const school = document.getElementById('regMuridSchool').value.trim();
+      const pin = document.getElementById('regMuridPin').value.trim();
+
+      if (!nis || !name) return showAlert('NIS dan Nama wajib diisi!', true);
+
+      showAlert('Mendaftarkan siswa ke Google Spreadsheet...', false);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.success && res.user) {
+              loginSuccess(res.user);
+            } else {
+              showAlert(res?.message || 'Gagal mendaftar ke Google Sheets.', true);
+            }
+          })
+          .withFailureHandler(() => {
+            localRegister(nis, name, grade, school, pin);
+          })
+          .apiRegisterUser({ role: 'Murid', nis, name, grade, school, password: pin });
+      } else {
+        localRegister(nis, name, grade, school, pin);
+      }
+    }
+
+    function localRegister(nis, name, grade, school, pin) {
+      loginSuccess({
+        id: 'SISWA-' + Date.now(),
+        role: 'Murid',
+        nis: nis,
+        name: name,
+        school: school,
+        grade: grade,
+        coins: 150,
+        stars: 0,
+        totalScore: 0,
+        capingStyle: 'caping_bambu'
+      });
+    }
+
+    function submitGuruLogin() {
+      const nip = document.getElementById('inputGuruNip').value.trim();
+      const pass = document.getElementById('inputGuruPass').value.trim();
+
+      if (!nip) return showAlert('Mohon isi Username / NIP Guru!', true);
+      if (!pass) return showAlert('Mohon isi Kata Sandi Guru!', true);
+      showAlert('Memverifikasi kredensial guru di Google Spreadsheet...', false);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.success && res.user) {
+              loginSuccess(res.user);
+            } else if (nip.toUpperCase() === 'GURU123' && pass === 'guru123') {
+              localGuruLogin(nip, pass);
+            } else {
+              showAlert(res?.message || 'Username / Kata Sandi salah!', true);
+            }
+          })
+          .withFailureHandler(() => {
+            localGuruLogin(nip, pass);
+          })
+          .apiLoginUser({ role: 'Guru', nis: nip, password: pass });
+      } else {
+        localGuruLogin(nip, pass);
+      }
+    }
+
+    function localGuruLogin(nip, pass) {
+      if (nip.toLowerCase() === 'guru123' && pass === 'guru123') {
+        loginSuccess({
+          id: 'GURU-01',
+          role: 'Guru',
+          nis: 'GURU123',
+          name: 'Ibu Pertiwi, S.Pd.',
+          school: 'SDN 01 Percontohan',
+          grade: 'Guru IPAS SD',
+          coins: 999,
+          stars: 15,
+          totalScore: 3500,
+          capingStyle: 'caping_emas'
+        });
+      } else {
+        showAlert('Username / Kata sandi salah! Atau klik tab "Daftar Akun Guru" untuk buat akun baru.', true);
+      }
+    }
+
+    function submitGuruRegister() {
+      const nip = document.getElementById('regGuruNip').value.trim();
+      const name = document.getElementById('regGuruName').value.trim();
+      const pass = document.getElementById('regGuruPass').value.trim();
+      const passConfirm = document.getElementById('regGuruPassConfirm').value.trim();
+      const grade = document.getElementById('regGuruGrade').value.trim();
+      const school = document.getElementById('regGuruSchool').value.trim();
+
+      if (!nip || !name || !pass) {
+        return showAlert('Username/NIP, Nama Lengkap, dan Kata Sandi Guru wajib diisi!', true);
+      }
+      if (pass.length < 4) {
+        return showAlert('Kata Sandi Guru minimal 4 karakter!', true);
+      }
+      if (pass !== passConfirm) {
+        return showAlert('Konfirmasi Kata Sandi tidak cocok!', true);
+      }
+
+      showAlert('Mendaftarkan akun Guru ke Google Spreadsheet...', false);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.success && res.user) {
+              loginSuccess(res.user);
+            } else {
+              showAlert(res?.message || 'Gagal mendaftar Guru ke Google Sheets.', true);
+            }
+          })
+          .withFailureHandler(() => {
+            localGuruRegister(nip, name, grade, school, pass);
+          })
+          .apiRegisterUser({ role: 'Guru', nis: nip, name, grade, school, password: pass });
+      } else {
+        localGuruRegister(nip, name, grade, school, pass);
+      }
+    }
+
+    function localGuruRegister(nip, name, grade, school, pass) {
+      loginSuccess({
+        id: 'GURU-' + Date.now(),
+        role: 'Guru',
+        nis: nip,
+        name: name,
+        school: school,
+        grade: grade,
+        coins: 500,
+        stars: 0,
+        totalScore: 0,
+        capingStyle: 'caping_emas'
+      });
+    }
+
+    function loginSuccess(user) {
+      playBeep(880, 0.2);
+      state.isLoggedIn = true;
+      state.user = {
+        ...state.user,
+        ...user,
+        caping: user.capingStyle === 'caping_emas' ? '👑' : '🤠'
+      };
+      updateUI();
+      navigateTo('map');
+    }
+
+    function openLoginModal() {
+      playBeep(300, 0.05);
+      state.isLoggedIn = false;
+      updateUI();
+      navigateTo('login');
+    }
+
+    // NAVIGATION
+    function navigateTo(screenId) {
+      if (!state.isLoggedIn && screenId !== 'login') {
+        screenId = 'login';
+        showAlert('Silakan masuk akun Guru atau Murid terlebih dahulu!', true);
+      }
+
+      playBeep(350, 0.05);
+      ['screenLogin', 'screenMap', 'screenLevel1', 'screenLevel2', 'screenLevel3', 'screenLevel4', 'screenLevel5', 'screenGradebook', 'screenLeaderboard', 'screenShop'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+
+      if (screenId === 'login') {
+        document.getElementById('screenLogin').classList.remove('hidden');
+      } else if (screenId === 'map') {
+        document.getElementById('screenMap').classList.remove('hidden');
+      } else if (screenId === 'gradebook') {
+        document.getElementById('screenGradebook').classList.remove('hidden');
+        checkAndRenderGradebook();
+      } else if (screenId === 'leaderboard') {
+        document.getElementById('screenLeaderboard').classList.remove('hidden');
+        renderLeaderboard();
+      } else if (screenId === 'shop') {
+        document.getElementById('screenShop').classList.remove('hidden');
+      }
+      updateUI();
+    }
+
+    function openModal(id) {
+      playBeep(400, 0.05);
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'modalRapor') renderRapor();
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function updateUI() {
+      const navLoginNotice = document.getElementById('mainNavLoginNotice');
+      const navLinks = document.getElementById('mainNavLinks');
+      const navUserStats = document.getElementById('mainNavUserStats');
+
+      if (!state.isLoggedIn) {
+        if (navLoginNotice) navLoginNotice.classList.remove('hidden');
+        if (navLinks) navLinks.classList.add('hidden');
+        if (navUserStats) {
+          navUserStats.classList.add('hidden');
+          navUserStats.classList.remove('flex');
+        }
+      } else {
+        if (navLoginNotice) navLoginNotice.classList.add('hidden');
+        if (navLinks) navLinks.classList.remove('hidden');
+        if (navUserStats) {
+          navUserStats.classList.remove('hidden');
+          navUserStats.classList.add('flex');
+        }
+      }
+
+      document.getElementById('navCoinDisplay').innerText = state.user.coins;
+      document.getElementById('shopUserCoins').innerText = state.user.coins;
+      document.getElementById('userCapingIcon').innerText = state.user.caping;
+      document.getElementById('navUserName').innerText = state.user.name ? state.user.name.split(' ')[0] : 'User';
+      document.getElementById('bannerStudentName').innerText = state.user.name;
+
+      // Role badge in navbar
+      const isTeacher = state.user.role === 'Guru';
+      document.getElementById('roleIcon').innerText = isTeacher ? '👨‍🏫' : '🧑‍🎓';
+      document.getElementById('roleText').innerText = state.user.role;
+      document.getElementById('userRoleBadge').className = isTeacher 
+        ? 'flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-rubik font-bold'
+        : 'flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-rubik font-bold';
+
+      // KHUSUS GURU: TAMPILKAN TOMBOL DAFTAR NILAI HANYA UNTUK GURU
+      const navGradebook = document.getElementById('navBtnGradebook');
+      if (isTeacher) {
+        navGradebook.classList.remove('hidden');
+        document.getElementById('bannerRoleLabel').innerText = 'Pendidik: ' + state.user.name;
+      } else {
+        navGradebook.classList.add('hidden');
+        document.getElementById('bannerRoleLabel').innerText = 'Murid (NIS: ' + state.user.nis + ')';
+      }
+
+      const totalStars = Object.values(state.scores).reduce((a, c) => a + c.stars, 0);
+      document.getElementById('bannerStars').innerText = totalStars + '/15';
+
+      for (let i = 1; i <= 5; i++) {
+        const s = state.scores[i];
+        const badgeEl = document.getElementById('starBadge' + i);
+        const scoreEl = document.getElementById('highScore' + i);
+        if (badgeEl) badgeEl.innerText = s.stars > 0 ? '⭐'.repeat(s.stars) + '☆'.repeat(3 - s.stars) : '☆☆☆';
+        if (scoreEl) scoreEl.innerText = s.highScore;
+      }
+    }
+
+    // TEACHER GRADEBOOK SCREEN (KHUSUS GURU)
+    function checkAndRenderGradebook() {
+      if (state.user.role !== 'Guru') {
+        document.getElementById('gradebookAccessDenied').classList.remove('hidden');
+        document.getElementById('gradebookContent').classList.add('hidden');
+        return;
+      }
+      document.getElementById('gradebookAccessDenied').classList.add('hidden');
+      document.getElementById('gradebookContent').classList.remove('hidden');
+      renderGradebookData();
+    }
+
+    let gradebookSample = [
+      { timestamp: '2026-10-02 08:35', nis: '1002', name: 'Siti Nurhaliza', grade: 'Kelas 4A', level: 1, title: 'Organ & Bibit', score: 320, stars: 3, status: 'Lulus KKM', badge: 'Sahabat Bibit' },
+      { timestamp: '2026-10-02 09:12', nis: '1001', name: 'Budi Santoso', grade: 'Kelas 4A', level: 2, title: 'Olah Tanah', score: 450, stars: 3, status: 'Lulus KKM', badge: 'Penjaga Tanah' },
+      { timestamp: '2026-10-02 10:04', nis: '1003', name: 'Ahmad Rizki', grade: 'Kelas 5B', level: 3, title: 'Hama Sawah', score: 410, stars: 2, status: 'Lulus KKM', badge: 'Pendekar Tani' },
+      { timestamp: '2026-10-02 11:30', nis: '1004', name: 'Dewi Ayu', grade: 'Kelas 4A', level: 1, title: 'Organ & Bibit', score: 280, stars: 2, status: 'Lulus KKM', badge: 'Sahabat Bibit' }
+    ];
+
+    function renderGradebookData() {
+      const tbody = document.getElementById('gradebookTableBody');
+      tbody.innerHTML = '';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.success && res.gradebook) {
+              populateGradebookTable(res.gradebook);
+            } else {
+              populateGradebookTable(gradebookSample);
+            }
+          })
+          .apiGetTeacherGradebook('Guru');
+      } else {
+        populateGradebookTable(gradebookSample);
+      }
+    }
+
+    function populateGradebookTable(list) {
+      const tbody = document.getElementById('gradebookTableBody');
+      tbody.innerHTML = '';
+      const filterClass = document.getElementById('filterGradebookClass').value;
+      const search = document.getElementById('searchGradebook').value.toLowerCase();
+
+      const filtered = list.filter(r => {
+        const mClass = filterClass === 'all' || (r.grade || '').includes(filterClass);
+        const mSearch = (r.name || r.studentName || '').toLowerCase().includes(search) || (r.nis || '').includes(search);
+        return mClass && mSearch;
+      });
+
+      filtered.forEach((r, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-emerald-50/50 transition';
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-center text-stone-400 font-mono">${idx + 1}</td>
+          <td class="py-2 px-3 font-mono text-[10px] text-stone-500">${r.timestamp}</td>
+          <td class="py-2 px-3 font-mono font-bold text-stone-700">${r.nis || '-'}</td>
+          <td class="py-2 px-3 font-bold text-stone-900">${r.name || r.studentName}</td>
+          <td class="py-2 px-3 text-stone-600">${r.grade}</td>
+          <td class="py-2 px-3 font-medium">Lv.${r.level || r.levelNumber}: ${r.title || r.levelTitle}</td>
+          <td class="py-2 px-3 text-center font-bold text-emerald-800">${r.score}</td>
+          <td class="py-2 px-3 text-center">${'⭐'.repeat(r.stars || 1)}</td>
+          <td class="py-2 px-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'Lulus KKM' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${r.status}
+            </span>
+          </td>
+          <td class="py-2 px-3 text-stone-600">${r.badge || r.badgeUnlocked || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function downloadGradebookCSV() {
+      playBeep(450, 0.05);
+      let csv = 'Timestamp,NIS,Nama Siswa,Kelas,Level,Judul Misi,Skor,Bintang,Status,Lencana\n';
+      gradebookSample.forEach(r => {
+        csv += `"${r.timestamp}","${r.nis}","${r.name}","${r.grade}",${r.level},"${r.title}",${r.score},${r.stars},"${r.status}","${r.badge}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Daftar_Nilai_IPAS_Guru_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // GAME LEVEL 1 QUIZ
+    const Q1_DATA = [
+      { q: 'Bagian tumbuhan yang bertugas menyerap air dan hara dari dalam tanah adalah...', a: ['Akar', 'Batang', 'Daun', 'Bunga'], c: 0, e: '🌱' },
+      { q: 'Organ utama tempat berlangsungnya proses fotosintesis dengan klorofil adalah...', a: ['Bunga', 'Daun', 'Akar', 'Buah'], c: 1, e: '🍃' },
+      { q: 'Gabah berkulit emas adalah bibit tanaman pangan pokok nusantara, yaitu...', a: ['Padi', 'Jagung', 'Kedelai', 'Gandum'], c: 0, e: '🌾' },
+      { q: 'Pembuluh dalam batang yang mengalirkan air dari akar ke daun disebut...', a: ['Xilem', 'Floem', 'Stomata', 'Kloroplas'], c: 0, e: '🎋' }
+    ];
+    let q1Index = 0, q1Score = 0, q1Timer = 30, q1Interval = null;
+
+    function startLevel(lvl) {
+      playBeep(450, 0.08);
+      if (lvl === 1) {
+        q1Index = 0; q1Score = 0; q1Timer = 30;
+        document.getElementById('screenMap').classList.add('hidden');
+        document.getElementById('screenLevel1').classList.remove('hidden');
+        loadQ1Question();
+        clearInterval(q1Interval);
+        q1Interval = setInterval(() => {
+          q1Timer--;
+          document.getElementById('q1Timer').innerText = q1Timer + 's';
+          if (q1Timer <= 0) {
+            clearInterval(q1Interval);
+            finishLevel(1, q1Score, Math.max(1, Math.round(q1Score / 150)));
+          }
+        }, 1000);
+      } else if (lvl === 2) startLevel2();
+      else if (lvl === 3) startLevel3();
+      else if (lvl === 4) startLevel4();
+      else if (lvl === 5) startLevel5();
+    }
+
+    function loadQ1Question() {
+      const q = Q1_DATA[q1Index];
+      document.getElementById('q1Illustration').innerText = q.e;
+      document.getElementById('q1Text').innerText = q.q;
+      const opts = document.getElementById('q1Options');
+      opts.innerHTML = '';
+      q.a.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full p-3 rounded-2xl border text-left text-xs font-bold hover:bg-emerald-50 transition flex items-center gap-2.5';
+        btn.innerHTML = `<span class="w-6 h-6 rounded-lg bg-stone-100 flex items-center justify-center">${String.fromCharCode(65 + idx)}</span> <span>${opt}</span>`;
+        btn.onclick = () => answerQ1(idx);
+        opts.appendChild(btn);
+      });
+    }
+
+    function answerQ1(chosen) {
+      const q = Q1_DATA[q1Index];
+      if (chosen === q.c) {
+        playBeep(600, 0.15);
+        q1Score += 120;
+      } else {
+        playBeep(180, 0.2, 'sawtooth');
+      }
+      q1Index++;
+      if (q1Index < Q1_DATA.length) loadQ1Question();
+      else {
+        clearInterval(q1Interval);
+        finishLevel(1, q1Score, q1Score >= 350 ? 3 : (q1Score >= 200 ? 2 : 1));
+      }
+    }
+
+    // LEVEL 2
+    let l2Growth = 20, l2Timer = 30, l2Interval = null;
+    function startLevel2() {
+      l2Growth = 20; l2Timer = 30;
+      document.getElementById('screenMap').classList.add('hidden');
+      document.getElementById('screenLevel2').classList.remove('hidden');
+      clearInterval(l2Interval);
+      l2Interval = setInterval(() => {
+        l2Timer--;
+        l2Growth = Math.min(100, l2Growth + 2.5);
+        document.getElementById('l2Timer').innerText = l2Timer + 's';
+        document.getElementById('l2GrowthVal').innerText = Math.round(l2Growth) + '%';
+        document.getElementById('l2GrowthBar').style.width = l2Growth + '%';
+        if (l2Growth >= 100 || l2Timer <= 0) {
+          clearInterval(l2Interval);
+          finishLevel(2, Math.round(l2Growth * 4.5), l2Growth >= 90 ? 3 : 2);
+        }
+      }, 1000);
+    }
+    function adjustL2Factor(factor) {
+      playBeep(520, 0.08);
+      l2Growth = Math.min(100, l2Growth + 8);
+      document.getElementById('l2GrowthVal').innerText = Math.round(l2Growth) + '%';
+      document.getElementById('l2GrowthBar').style.width = l2Growth + '%';
+    }
+
+    // LEVEL 3
+    let l3Score = 0, l3Time = 25, l3Interval = null, activeMole = -1;
+    function startLevel3() {
+      l3Score = 0; l3Time = 25;
+      document.getElementById('screenMap').classList.add('hidden');
+      document.getElementById('screenLevel3').classList.remove('hidden');
+      document.getElementById('l3Score').innerText = '0';
+      clearInterval(l3Interval);
+      l3Interval = setInterval(() => {
+        l3Time--;
+        document.getElementById('l3Timer').innerText = l3Time + 's';
+        const prev = activeMole;
+        if (prev >= 0) document.getElementById('hole' + prev).innerText = '';
+        activeMole = Math.floor(Math.random() * 9);
+        const isPest = Math.random() > 0.3;
+        document.getElementById('hole' + activeMole).innerText = isPest ? (Math.random() > 0.5 ? '🦗' : '🐛') : '🐞';
+        if (l3Time <= 0) {
+          clearInterval(l3Interval);
+          finishLevel(3, l3Score, l3Score >= 400 ? 3 : 2);
+        }
+      }, 900);
+    }
+    function hitHole(idx) {
+      if (idx === activeMole) {
+        const text = document.getElementById('hole' + idx).innerText;
+        if (text === '🦗' || text === '🐛') {
+          playBeep(650, 0.1);
+          l3Score += 50;
+        } else if (text === '🐞') {
+          playBeep(150, 0.2, 'sawtooth');
+          l3Score = Math.max(0, l3Score - 30);
+        }
+        document.getElementById('l3Score').innerText = l3Score;
+        document.getElementById('hole' + idx).innerText = '';
+        activeMole = -1;
+      }
+    }
+
+    // LEVEL 4
+    function startLevel4() {
+      document.getElementById('screenMap').classList.add('hidden');
+      document.getElementById('screenLevel4').classList.remove('hidden');
+      document.getElementById('l4Content').innerHTML = `
+        <div class="bg-amber-50 p-4 rounded-2xl border text-center space-y-3">
+          <div class="text-4xl">🌾🌽🍅</div>
+          <p class="text-xs font-bold text-stone-800">Pak Tani memanen 5 kg Jagung Manis seharga Rp 8.000/kg. Berapa pendapatan Pak Tani?</p>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button onclick="finishL4Math(true)" class="p-2.5 rounded-xl border bg-white font-bold hover:bg-emerald-50">Rp 40.000</button>
+            <button onclick="finishL4Math(false)" class="p-2.5 rounded-xl border bg-white font-bold hover:bg-emerald-50">Rp 35.000</button>
+          </div>
+        </div>
+      `;
+    }
+    function finishL4Math(isCorrect) {
+      const score = isCorrect ? 550 : 250;
+      finishLevel(4, score, isCorrect ? 3 : 1);
+    }
+
+    // LEVEL 5
+    let l5Score = 0, l5Timer = 20, l5Interval = null;
+    let huluVal = 50, tengahVal = 45, hilirVal = 40;
+    function startLevel5() {
+      l5Score = 0; l5Timer = 20;
+      huluVal = 50; tengahVal = 45; hilirVal = 40;
+      document.getElementById('screenMap').classList.add('hidden');
+      document.getElementById('screenLevel5').classList.remove('hidden');
+      clearInterval(l5Interval);
+      l5Interval = setInterval(() => {
+        l5Timer--;
+        document.getElementById('l5Timer').innerText = l5Timer + 's';
+        huluVal = Math.max(0, Math.min(100, huluVal + (Math.random() * 6 - 3)));
+        tengahVal = Math.max(0, Math.min(100, tengahVal + (Math.random() * 6 - 3)));
+        hilirVal = Math.max(0, Math.min(100, hilirVal + (Math.random() * 6 - 3)));
+
+        document.getElementById('gaugeHulu').style.height = huluVal + '%';
+        document.getElementById('gaugeTengah').style.height = tengahVal + '%';
+        document.getElementById('gaugeHilir').style.height = hilirVal + '%';
+        document.getElementById('valHulu').innerText = Math.round(huluVal) + '%';
+        document.getElementById('valTengah').innerText = Math.round(tengahVal) + '%';
+        document.getElementById('valHilir').innerText = Math.round(hilirVal) + '%';
+
+        if (huluVal >= 40 && huluVal <= 80 && tengahVal >= 40 && tengahVal <= 80) {
+          l5Score += 30;
+          document.getElementById('l5Score').innerText = l5Score;
+        }
+
+        if (l5Timer <= 0) {
+          clearInterval(l5Interval);
+          finishLevel(5, l5Score + 200, l5Score >= 350 ? 3 : 2);
+        }
+      }, 1000);
+    }
+    function toggleSubakGate(petak) {
+      playBeep(480, 0.06);
+      if (petak === 'hulu') huluVal = 55;
+      if (petak === 'tengah') tengahVal = 55;
+      if (petak === 'hilir') hilirVal = 55;
+    }
+
+    // LEVEL COMPLETION
+    function finishLevel(lvl, score, stars) {
+      playBeep(880, 0.3);
+      if (typeof confetti === 'function') confetti({ particleCount: 70, spread: 60 });
+
+      state.scores[lvl] = {
+        stars: Math.max(state.scores[lvl].stars, stars),
+        highScore: Math.max(state.scores[lvl].highScore, score)
+      };
+      state.user.coins += (stars * 20);
+
+      document.getElementById('resLevelTitle').innerText = 'Misi ' + lvl + ' Tuntas!';
+      document.getElementById('resStars').innerText = '⭐'.repeat(stars);
+      document.getElementById('resScore').innerText = score;
+      document.getElementById('resCoins').innerText = '+' + (stars * 20);
+
+      // Simpan skor ke Google Spreadsheet
+      syncScoreToGoogleSheets({
+        studentName: state.user.name,
+        nis: state.user.nis,
+        school: state.user.school,
+        grade: state.user.grade,
+        levelNumber: lvl,
+        levelTitle: 'Misi ' + lvl,
+        score: score,
+        stars: stars,
+        coinsEarned: stars * 20,
+        status: score >= 60 ? 'Lulus KKM' : 'Coba Lagi'
+      });
+
+      openModal('modalResult');
+      updateUI();
+    }
+
+    function syncScoreToGoogleSheets(data) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            document.getElementById('resSyncStatus').innerText = '✅ Tersimpan langsung di Google Sheets (' + (res.rowNumber ? 'Baris ' + res.rowNumber : 'Tersimpan') + ')';
+          })
+          .withFailureHandler(() => {
+            document.getElementById('resSyncStatus').innerText = '⚠️ Disimpan lokal';
+          })
+          .apiSaveScore(data);
+      } else {
+        document.getElementById('resSyncStatus').innerText = '✅ Tersimpan di Memori Lokal';
+      }
+    }
+
+    function renderLeaderboard() {
+      const rows = document.getElementById('leaderboardRows');
+      rows.innerHTML = '';
+      const sample = [
+        { rank: 1, name: 'Siti Nurhaliza', score: 1450, stars: 12, badge: '👑 Petani Legendaris' },
+        { rank: 2, name: 'Budi Santoso (Anda)', score: 1280, stars: 10, badge: '🌟 Juara Panen' },
+        { rank: 3, name: 'Ahmad Rizki', score: 980, stars: 8, badge: '🌾 Pendekar Subak' },
+        { rank: 4, name: 'Dewi Ayu', score: 850, stars: 7, badge: '🌱 Petani Teladan' }
+      ];
+      sample.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = s.name.includes('Anda') ? 'bg-amber-50 font-bold' : 'hover:bg-stone-50';
+        tr.innerHTML = `
+          <td class="p-2.5 text-center font-bold">${s.rank}</td>
+          <td class="p-2.5 font-bold">${s.name}</td>
+          <td class="p-2.5 text-center font-bold text-emerald-800">${s.score}</td>
+          <td class="p-2.5 text-center">⭐ ${s.stars}</td>
+          <td class="p-2.5 text-stone-600">${s.badge}</td>
+        `;
+        rows.appendChild(tr);
+      });
+    }
+
+    function refreshLeaderboardOnline() {
+      playBeep(450, 0.05);
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.leaderboard) {
+              const rows = document.getElementById('leaderboardRows');
+              rows.innerHTML = '';
+              res.leaderboard.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                  <td class="p-2.5 text-center font-bold">${s.rank}</td>
+                  <td class="p-2.5 font-bold">${s.name}</td>
+                  <td class="p-2.5 text-center font-bold text-emerald-800">${s.score}</td>
+                  <td class="p-2.5 text-center">⭐ ${s.stars}</td>
+                  <td class="p-2.5 text-stone-600">${s.badge}</td>
+                `;
+                rows.appendChild(tr);
+              });
+            }
+          })
+          .apiGetLeaderboard();
+      }
+    }
+
+    function renderRapor() {
+      document.getElementById('raporName').innerText = state.user.name;
+      document.getElementById('raporNisn').innerText = state.user.nis;
+      document.getElementById('raporSchool').innerText = state.user.school;
+      document.getElementById('raporGrade').innerText = state.user.grade;
+      document.getElementById('raporPrintDate').innerText = 'Tanggal: ' + new Date().toLocaleDateString('id-ID', { dateStyle: 'long' });
+
+      const tbody = document.getElementById('raporTableBody');
+      tbody.innerHTML = '';
+      const titles = [
+        'Kenali Organ & Bibit Pangan',
+        'Olah Tanah & Nutrisi',
+        'Basmi Hama Sahabat Petani',
+        'Panen Raya & Pasar Tani',
+        'Irigasi Subak & Ekosistem Sawah'
+      ];
+      for (let i = 1; i <= 5; i++) {
+        const sc = state.scores[i];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2 text-center font-mono">${i}</td>
+          <td class="p-2 font-bold">${titles[i - 1]}</td>
+          <td class="p-2 text-center text-stone-500">${i <= 2 ? 'Fase B' : 'Fase C'}</td>
+          <td class="p-2 text-center font-bold text-emerald-800">${sc.highScore}</td>
+          <td class="p-2 text-center">${sc.stars > 0 ? '⭐'.repeat(sc.stars) : '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function equipCaping(icon, name) {
+      playBeep(500, 0.05);
+      state.user.caping = icon;
+      updateUI();
+      alert('Berhasil memakai: ' + name + ' ' + icon);
+    }
+
+    function buyCaping(icon, name, price) {
+      if (state.user.coins >= price) {
+        state.user.coins -= price;
+        state.user.caping = icon;
+        playBeep(700, 0.1);
+        updateUI();
+        alert('Selamat! Berhasil membeli ' + name + ' ' + icon);
+      } else {
+        playBeep(180, 0.2, 'sawtooth');
+        alert('Koin tidak cukup! Selesaikan misi untuk dapat koin.');
+      }
+    }
+
+    // Default: langsung jalankan UI dan tampilkan menu login terlebih dahulu
+    navigateTo('login');
+    updateUI();
+  </script>
+</body>
+</html>
