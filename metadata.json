@@ -1,0 +1,6 @@
+{
+  "name": "Petualangan Tani Cilik",
+  "description": "Game edukasi IPAS Kurikulum Merdeka Fase B & C (SD Kelas 4-6) dengan pencatatan otomatis ke Google Apps Script & Google Spreadsheet.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
